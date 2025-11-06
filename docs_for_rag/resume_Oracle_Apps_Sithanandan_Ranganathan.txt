@@ -1,0 +1,57 @@
+CANDIDATE: Sithanandan Ranganathan
+EMAIL: Sithanandandeepak@gmail.com
+PHONE: +91-85250 82888, 9894261268
+LOCATION: Chennai, India
+CURRENT ROLE: Associate Consultant
+CURRENT COMPANY: TCS, Chennai
+EXPERIENCE: 5 years
+ERP SYSTEMS: Oracle ERP, Oracle ASCP, Oracle Demantra, Oracle APCC, Oracle Cloud Fusion Demand management & Supply planning, Agile PLM, BAAN ERP
+ERP MODULES: Material expediting, Product life cycle management, New Product setups/testing, Material master Data Governance, material planning, Global Supply Network Planning, Supply planning, stock level optimization, order fulfillment, KPI Metric and business report automation, Excess and obsolete inventory analytics, Demand Planning
+TECHNICAL SKILLS: Python (Pandas), Tableau, Power-BI, VBA-Macros, Advanced Excel (Pivots, charts, trends, lookups, Word), PL/SQL, Oracle Cloud Fusion, Agile PLM, BAAN ERP
+CERTIFICATIONS: 
+
+SUMMARY:
+Enthusiastic Supply Chain Oracle consultant eager to contribute to team success through hard work, attention to detail and excellent organizational skills. Hands on experience in Product life cycle management, Global Supply Network Planning, Excess and obsolete inventory analytics, Demand Planning, Supply planning, material planning, New Product setups/testing, order fulfillment, Material master Data Governance, Material expediting, stock level optimization, KPI Metric and business report automation.
+
+FULL RESUME TEXT:
+Sithanandan Ranganathan   
+Cell: +91-85250 82888, 9894261268  
+Email: Sithanandandeepak@gmail.com  
+ 
+OVERVIEW  
+Enthusiastic Supply Chain Oracle consultant eager to contribute to team success through hard work, attention 
+to detail and excellent organizational skills. Hands on experience in Product life cycle management, Global 
+Supply Network Planning, Excess and obsolete inventory analytics, Demand Planning, Supply planning, material 
+planning, New Product setups/testing, order fulfillment, Material master Data Governance, Material expediting, 
+stock level optimization, KPI Metric and business report automation.  
+                   Areas of Tools Expertise  
+Oracle ERP | Oracle ASCP | Oracle Demantra | Oracle APCC |Oracle cloud Fusion Demand management & Supply 
+planning | Agile PLM | BAAN ERP |Python (Pandas)  
+Tableau, Power-BI, Kinaxis Rapid response, VBA-Macros, Advanced Excel (Pivots, charts, trends, lookups,  
+Word) and PL/SQL  
+Objective:  
+   I aspire for a challenging position in a professional Organization where I can enhance my skills and 
+strengthen them in conjunction with Organization’s goals.  
+Professional Experience:  
+TCS, Chennai                                                                                                                              July-2023 - Till today  
+Client: Biogen(Pharma process manufacturing industries)                                                                                           
+Role: Associate Consultant ( Oracle Demantra, ASCP, APCC – Rollout, Enhancements and Support)   
+Summary:  
+Biogen is a leading global biotechnology company that pioneers science and drives innovations for complex and 
+devastating diseases. Biogen is advancing a pipeline of potential therapies across neurology, neuropsychiatry, 
+specialized immunology and rare disease and remains acutely focused on its purpose of serving humanity through 
+science while advancing a healthier, more sustainable and equitable world.   
+Roles and responsibilities:    
+ Single handedly delivered more than 12 projects related to Member Management, Chaining 
+Management, NPI Process and Phase-in Phase-out.   
+ Worked on customizing Demantra Collection Process, Member Management using PL/SQL.   
+ Have hands-on Levels, Series, Rolling Profile, Integration Interface, Workflow creation.   
+ Supported APEX for IHS Forecast (3rd Party Forecast).   
+ Have good knowledge on Engine, Forecast Tree, Method Creation.  
+ Worked on customizing Member Management and chaining management.  
+ Setup the collection request set to run sequential order for plan run.  
+ Create and document the system architecture based on the business requirements.  
+ Develop and implement customizations or extensions to meet unique business requirements.  
+ Develop and execute test plans to ensure the proper functionality of ASCP.  
+ Collaborate with end-users to conduct user acceptance testing (UAT) for rollout projects  
+ Provide training to end-users and s
