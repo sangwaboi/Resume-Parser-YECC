@@ -118,7 +118,11 @@ def parse_resume_with_skyq(resume_text, candidate_name="Unknown", retry_count=0)
     max_length = MAX_TEXT_LENGTHS[min(retry_count, len(MAX_TEXT_LENGTHS)-1)]
     truncated_text = resume_text[:max_length]
     
-    prompt = f"""Extract information from this ERP Consultant resume. Return ONLY valid JSON (no markdown, no explanations):
+    prompt = f"""
+Extract information from this ERP Consultant resume and return ONLY valid JSON (no markdown, no explanations).
+
+Use the following JSON structure, accurately filling each field using resume details or leaving empty ("") / [] if unavailable.
+
 {{
   "name": "",
   "email": "",
@@ -131,24 +135,59 @@ def parse_resume_with_skyq(resume_text, candidate_name="Unknown", retry_count=0)
   "current_company": "",
   "erp_systems": [],
   "erp_modules": [],
-  "experience": [{{"company": "", "role": "", "duration": "", "responsibilities": ""}}],
-  "education": [{{"degree": "", "university": "", "year": ""}}],
   "technical_skills": [],
   "certifications": [],
-  "projects": []
+  "education": [
+    {{
+      "degree": "",
+      "university": "",
+      "year": ""
+    }}
+  ],
+  "job_experience": [
+    {{
+      "position": "",  // One of: Consultant, Sr.Developer, Sr Tester, Associate Consultant, Associate Specialist, Principal
+      "country": "",
+      "company_name": "",
+      "employment_type": "", // One of: Full-time, Part-time, Self-employed, Freelance, Internship, Trainee
+      "currently_working_here": "",
+      "from_date": "",
+      "to_date": "",
+      "short_description": ""
+    }}
+  ],
+  "erp_projects_experience": [
+    {{
+      "company_name": "",
+      "project_name": "",
+      "project_domain": "", // Choose the most appropriate: Healthcare, Finance, Retail, Telecommunications, Energy, Transportation, Education, Government, Real Estate, Hospitality, Media and Entertainment, Consumer Goods, Agriculture, Automobiles, Oracle Cloud Financials, Information Technology
+      "project_type": [], // Multiple choices from: Implementation, Roll-out, Support, Specialized Assignments
+      "currently_working_on_this_project": "",
+      "from_date": "",
+      "to_date": "",
+      "project_phases_involved": [], // Multiple choices: Requirement Gathering (HLA), CRP, Functional Configuration, Technical Configuration, KUT, UAT, Data Migration, SIT, Post-Go Live Support, Custom Report Building, Integration Building, Custom Solution Building
+      "work_location_type": [], // Multiple choices: Onsite, Offshore, Work from Home
+      "product": "", // One from: Oracle Cloud ERP (Fusion), Oracle Fusion
+      "track": "", // One from: Business Intelligence (BI), Financials (Fin), Human Capital Management (HCM), Supply Chain Management (SCM)
+      "financials_modules": [], // Multiple: GL, AP, AR, CM, FA, Tax, FR, IC, RM, Exp, Lease Management, Subledger Accounting, Collection, Risk Management, Template Design
+      "hcm_modules": [], // Multiple: Talent, Absence, ORC, Core HR, Payroll, Benefits, OTL, Compensation, Learn, Enterprise and Legal Structure, HCM Data Loader, Self Service HR
+      "scm_modules": [], // Multiple: Shipping, Inventory Management, Cost Management, Manufacturing, Quality Management, Supply Chain Financial Orchestration, Supply Chain Planning and Collaboration, Pricing, Order Management, Maintenance, Data Migration, Self-Service Procurement, Purchasing
+      "role": "" // One of: Trainee, Associate Consultant, NEWYECC, Junior Consultant, Principal Consultant, Senior Consultant, Solution Architect, Test
+    }}
+  ]
 }}
 
 IMPORTANT:
-- The "name" is usually found at the very top of the resume. If not explicitly labeled, infer it from the first standalone capitalized line before contact info or 'Profile/Summary'.
-- If multiple names are found, use the one most likely to be the candidate’s.
-- Extract ALL ERP systems (SAP, Oracle, Microsoft Dynamics, NetSuite, etc.) and modules (FI, CO, MM, SD, HR, etc.)
-- Calculate total_years_experience from dates or "X years" phrases
-- Include variations: D365=Dynamics 365, EBS=Oracle E-Business Suite, FICO=FI+CO
-- Use "" or [] if info not found
+- "name" usually appears at the very top of the resume; infer it if unlabeled.
+- Infer missing data logically from context (e.g., project roles, ERP modules, company details).
+- Include ALL ERP systems (SAP, Oracle, Dynamics 365, NetSuite, etc.) and map module abbreviations (e.g., FICO = FI + CO).
+- Calculate total_years_experience from durations or phrases like "X years".
+- Use "" or [] where data cannot be confidently inferred.
 
 Resume:
 {truncated_text}
 """
+
 
     
     last_error = None
