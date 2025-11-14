@@ -1,27 +1,39 @@
 import os
 
 UPLOAD_FOLDER = 'uploads'
-MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
+MAX_CONTENT_LENGTH = 16 * 1024 * 1024  
 ALLOWED_EXTENSIONS = {'pdf', 'docx', 'doc'}
 
+EXCEL_FILE = 'resumes_database.xlsx'
+LOCAL_DOCS_DIR = 'docs_for_rag'
+
 SKYQ_BASE_URL = "https://ai.skyq.tech"
-SKYQ_JWT_TOKEN = "Your_SkyQ_JWT_Token_Here"
+
+SKYQ_JWT_TOKEN = "Your_SkyQ_JWT_Token_Here"  
+
 SKYQ_HEADERS = {
     "Authorization": f"Bearer {SKYQ_JWT_TOKEN}",
     "Content-Type": "application/json"
 }
 
-YECC_BASE_URL = "https://api.yecc.tech"
-YECC_API_TOKEN = "Your_YECC_API_Token_Here"
+USE_BETA_ENVIRONMENT = False
+
+YECC_API_TOKEN = "Your_YECC_API_Token_Here"  
+
+if USE_BETA_ENVIRONMENT:
+    YECC_BASE_URL = "https://betaapi.yecc.tech"
+    FRONTEND_ORIGIN = "https://beta.yecc.tech"
+else:
+    YECC_BASE_URL = "https://api.yecc.tech"
+    FRONTEND_ORIGIN = "https://yecc.tech"
+
 YECC_HEADERS = {
     "Accept": "application/json, text/plain, */*",
-    "Authorization": YECC_API_TOKEN,
+    "Authorization": f"{YECC_API_TOKEN}",
     "Content-Type": "application/json",
-    "Origin": "https://beta.yecc.tech",
-    "Referer": "https://beta.yecc.tech/"
+    "Origin": FRONTEND_ORIGIN,
+    "Referer": f"{FRONTEND_ORIGIN}/"
 }
-
-EXCEL_FILE = 'resumes_database.xlsx'
 
 MODEL_CONFIGS = [
     {"model": "llama3:8b", "temperature": 0.1, "max_tokens": 1500},
@@ -32,4 +44,3 @@ MODEL_CONFIGS = [
 
 MAX_TEXT_LENGTHS = [5000, 4000, 3000, 2500]
 
-LOCAL_DOCS_DIR = 'docs_for_rag'
