@@ -81,7 +81,7 @@ pip install -r requirements.txt
 
 ### 4. Configure API Keys
 
-Open `config.py` and update the following:
+Open `.env` and update the following:
 
 ```python
 # SkyQ AI Configuration
