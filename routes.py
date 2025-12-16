@@ -12,7 +12,6 @@ from search import search_with_rag
 
 
 def register_routes(app):
-    """Register all routes with the Flask app"""
     
     @app.route('/')
     def home():
@@ -140,7 +139,6 @@ def register_routes(app):
     
     @app.route('/api/clean-database', methods=['POST'])
     def clean_database_route():
-        """Clean NaN values from existing database"""
         try:
             success, message = clean_database()
             if success:

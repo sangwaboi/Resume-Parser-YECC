@@ -1,11 +1,9 @@
 import os
-import requests
-from config import SKYQ_BASE_URL, SKYQ_JWT_TOKEN, SKYQ_HEADERS, LOCAL_DOCS_DIR
+from config import LOCAL_DOCS_DIR
 from utils import safe_join
 
 
 def upload_resume_to_docs(resume_text, filename, parsed_data):
-    """Upload resume to Open WebUI for RAG capabilities"""
     try:
         doc_content = f"""CANDIDATE: {parsed_data.get('name', 'Unknown')}
 EMAIL: {parsed_data.get('email', 'N/A')}
@@ -32,36 +30,6 @@ FULL RESUME TEXT:
             f.write(doc_content)
         
         print(f"✅ Document saved locally: {local_path}")
-        
-        try:
-            with open(local_path, 'rb') as f:
-                files = {'file': (local_filename, f, 'text/plain')}
-                headers = {
-                    'Authorization': f"Bearer {SKYQ_JWT_TOKEN}",
-                    'Accept': 'application/json'
-                }
-                
-                response = requests.post(
-                    f"{SKYQ_BASE_URL}/api/v1/files/",
-                    headers=headers,
-                    files=files,
-                    timeout=30
-                )
-                
-                if response.status_code in [200, 201]:
-                    result = response.json()
-                    file_id = result.get('id') or result.get('file_id')
-                    print(f"✅ Uploaded to Open WebUI RAG: file_id={file_id}")
-                    
-                    parsed_data['_rag_file_id'] = file_id
-                    return True
-                else:
-                    print(f"⚠️  Upload returned {response.status_code}: {response.text[:200]}")
-                    
-        except Exception as upload_error:
-            print(f"⚠️  RAG upload failed: {upload_error}")
-            print(f"💡 Tip: File saved locally in {local_path}")
-        
         return True
         
     except Exception as e:

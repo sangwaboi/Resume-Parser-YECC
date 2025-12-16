@@ -6,7 +6,6 @@ from routes import register_routes
 
 
 def create_app():
-    """Application factory pattern"""
     app = Flask(__name__)
     
     app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -22,10 +21,10 @@ def create_app():
 
 if __name__ == '__main__':
     print("\n" + "="*60)
-    print("🚀 YourERPCoach Resume Parser - SkyQ AI Edition")
+    print("🚀 YourERPCoach Resume Parser - Gemini AI Edition")
     print("="*60)
-    print("✅ SkyQ AI token configured")
-    print("📊 Using models: llama3:8b, llama3.2:3b, deepseek-r1:8b, gpt-oss:20b")
+    print("✅ Gemini API configured")
+    print("📊 Using model: gemini-2.0-flash-exp")
     print("="*60 + "\n")
     
     app = create_app()

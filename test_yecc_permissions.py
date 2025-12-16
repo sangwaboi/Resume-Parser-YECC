@@ -1,8 +1,3 @@
-"""
-YECC API Permission Test Script
-Now with correct sequence using actual user + slug initialization
-"""
-
 import requests
 import json
 import random
@@ -49,11 +44,9 @@ def main():
     print(f"Base URL: {YECC_BASE_URL}")
     print(f"Token (first 20 chars): {YECC_HEADERS.get('Authorization', '')[:20]}...")
 
-    # Test 1–2: Public endpoints
     test_endpoint("GET", "/resumeCountry", "Get Country List (public)")
     test_endpoint("GET", "/resumeLanguages", "Get Languages List (public)")
 
-    # Step 3: Create a test user
     test_email = f"permission{random.randint(1000,9999)}@example.com"
     test_user_payload = {
         "RoleID": "Candidate",
@@ -75,7 +68,6 @@ def main():
     user_id = res_user.json().get("data", {}).get("UserID")
     print(f"✅ Created user ID: {user_id}")
 
-    # Step 4: Generate Resume URL
     res_url = test_endpoint("POST", f"/ResumeBuilder/generateResumeUrl/{user_id}", "Generate Resume URL")
     if not res_url or res_url.status_code != 200:
         print("❌ Stopping: Resume URL generation failed.")
@@ -84,10 +76,8 @@ def main():
     resume_slug = res_url.json().get("data")
     print(f"✅ Generated resume slug: {resume_slug}")
 
-    # Step 5: Initialize resume (mandatory before PUT)
     test_endpoint("GET", f"/ResumeBuilder/{resume_slug}", "Initialize Resume (GET required before PUT)")
 
-    # Step 6: Update Personal Info
     test_personal_info = {
         "FirstName": "PermTest",
         "LastName": "User",
@@ -100,7 +90,6 @@ def main():
     }
     test_endpoint("PUT", f"/ResumeBuilder/PersonalInfo/{resume_slug}", "Update Personal Info", test_personal_info)
 
-    # Step 7: Final summary
     print("\n" + "="*60)
     print("📊 PERMISSION TEST SUMMARY")
     print("="*60)
@@ -108,7 +97,7 @@ def main():
 ✅ Token works with: /users, /ResumeBuilder/generateResumeUrl, /ResumeBuilder/{resume_slug}
 ✅ Resume slug created successfully: {resume_slug}
 
-⚠️ If PUT requests still fail with 401 after GET /ResumeBuilder/{slug},
+⚠️ If PUT requests still fail with 401 after GET /ResumeBuilder/{resume_slug},
    double-check Authorization header formatting or token role permissions.
 
 🎯 Next: Try your full sync_to_yecc_api() function with this same token.

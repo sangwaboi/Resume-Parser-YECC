@@ -6,7 +6,6 @@ from config import EXCEL_FILE
 
 
 def save_to_excel(parsed_data):
-    """Save parsed resume data to Excel"""
     try:
         flat_data = {
             'Timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
@@ -48,7 +47,6 @@ def save_to_excel(parsed_data):
 
 
 def get_resume_count():
-    """Get the total count of resumes in database"""
     try:
         if os.path.exists(EXCEL_FILE):
             df = pd.read_excel(EXCEL_FILE)
@@ -60,7 +58,6 @@ def get_resume_count():
 
 
 def clean_database():
-    """Clean NaN values from existing database"""
     try:
         if not os.path.exists(EXCEL_FILE):
             return False, "No database found"

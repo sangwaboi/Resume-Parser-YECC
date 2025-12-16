@@ -1,12 +1,22 @@
 import json
 import time
-import requests
 import re
-from config import SKYQ_BASE_URL, SKYQ_HEADERS, MODEL_CONFIGS, MAX_TEXT_LENGTHS
+import google.generativeai as genai
+from config import GEMINI_API_KEY, GEMINI_MODEL
 from utils import clean_array, extract_email, extract_phone, extract_linkedin, extract_years_experience
 
+genai.configure(api_key=GEMINI_API_KEY)
+
+gemini_model = genai.GenerativeModel(
+    model_name=GEMINI_MODEL,
+    generation_config={
+        "temperature": 0.1,
+        "top_p": 0.9,
+        "max_output_tokens": 4000,
+    }
+)
+
 def fix_json_string(json_str):
-    """Fix common JSON formatting issues"""
     if not json_str or not json_str.strip():
         return "{}"
     
@@ -94,27 +104,7 @@ def safe_json_parse(content, max_attempts=4):
     
     raise json.JSONDecodeError("Could not parse JSON after all attempts", content, 0)
 
-def smart_truncate_resume(resume_text, max_length=8000):
-    """Smart truncation keeping important sections"""
-    if len(resume_text) <= max_length:
-        return resume_text, False
-    
-    header_size = min(2500, max_length // 3)
-    footer_size = max_length - header_size - 50  
-    
-    header = resume_text[:header_size]
-    footer = resume_text[-footer_size:]
-    
-    truncated = header + "\n\n[... middle section omitted ...]\n\n" + footer
-    
-    print(f"⚠️  Smart truncation applied:")
-    print(f"   Original: {len(resume_text):,} chars")
-    print(f"   Kept: {len(truncated):,} chars ({int(len(truncated)/len(resume_text)*100)}%)")
-    
-    return truncated, True
-
 def create_original_prompt(resume_text):
-    resume_snippet = resume_text[:7500] if len(resume_text) > 7500 else resume_text
     
     return f"""Extract information from this ERP Consultant resume. Return ONLY valid JSON (no markdown, no explanations, no thinking process).
 {{
@@ -210,81 +200,75 @@ G. SUMMARY EXTRACTION
 2. If not found, capture the first 2-4 lines before experience starts.
 3. Must be ≤ 3 sentences.
 
-H. JOB EXPERIENCE EXTRACTION
-1. Extract each job with: title, company, dates, location, responsibilities
-2. Accept date formats: Jan 2020 – Mar 2023, 01/2020 to 03/2023, 2020-2023, 2021-Present
-3. currently_working_here = true IF: "Present", "Now", "Till date", no end date
-4.Look for keywords: "Responsibilities", "Duties", "Achievements", "Role", "Internships"
+H. JOB EXPERIENCE EXTRACTION (VERY IMPORTANT - HANDLE ALL FORMATS)
+1. Look for ANY employment history regardless of format:
+   - Traditional format: "Company Name | Role | Duration"
+   - Section-based: "Organization:", "Role:", "Duration:"
+   - Project-based: "Projects Worked on:", "Implementation Projects:", "Support Projects:"
+   - Bullet format: Company and role in bullets
+   - Internships and past experiences count as job_experience too
+2. For EACH employer/organization mentioned, create a job_experience entry
+3. Extract these fields for each job:
+   - position: The job title/role/designation
+   - company_name: The organization/employer name
+   - from_date: Start date (e.g., "August 2022", "Aug 2022", "2022")
+   - to_date: End date or "Present" if current
+   - currently_working_here: true if "Present", "Current", "Till date", or no end date
+   - short_description: Key duties, responsibilities, achievements (combine bullet points)
+   - country: Location/country if mentioned
+   - employment_type: Full-time, Part-time, Contract, Internship
+4. Accept ALL date formats: "August 2022 – Present", "Aug'22 – May'23", "2020-2023", "Jun 2018 – July 2021"
+5. If resume mentions "X years of experience" but only projects (no company names), create ONE job_experience entry with the overall description
+6. Internships should also be extracted as job_experience entries with employment_type="Internship"
+7. NEVER return empty job_experience if the resume mentions any work history, roles, or professional duties
 
 I. PROJECT EXTRACTION (ERP SPECIFIC)
 1. For each project: name, region, modules, role, description
 2. If multiple projects under one job → create multiple entries.
 
 J. ERP MODULE DETECTION (AUTO-INFER)
-Detect ALL module keywords: GL, AP, AR, FA, CM, INV, PO, OM, OTL, Payroll, etc.
+Detect ALL module keywords: GL, AP, AR, FA, CM, INV, PO, OM, OTL, Payroll, Core HR, Absence Management, Benefits, Recruiting, etc.
 
 K. ERP SYSTEM DETECTION
-Detect: Oracle Fusion/Cloud, SAP, S/4HANA, NetSuite, Dynamics 365, Workday
+Detect: Oracle Fusion/Cloud, SAP, S/4HANA, NetSuite, Dynamics 365, Workday, Salesforce
 
 L. EDUCATION, SKILLS, CERTIFICATIONS
 Extract all degrees, technical skills, and certifications found.
 
+M. TECHNICAL SKILLS EXTRACTION
+Extract ALL mentioned skills including:
+- ERP modules (GL, AP, AR, FA, CM, Core HR, etc.)
+- Software tools (Microsoft Office, Tableau, Salesforce, etc.)
+- Soft skills related to consulting (Client Handling, Training, Communication, Documentation)
+
 Resume:
-{resume_snippet}
+{resume_text}
 
 Return ONLY the JSON object with no additional text:"""
 
-def parse_single_chunk(chunk_text, chunk_description, model_config, timeout=150):
-    """Parse with improved error handling and longer timeout"""
+def parse_resume_with_gemini(resume_text, candidate_name="Unknown", retry_count=0):
     
-    prompt = create_original_prompt(chunk_text)
+    print(f"\n{'='*70}")
+    print(f"📄 Parsing Resume with Gemini")
+    print(f"{'='*70}")
+    print(f"Candidate: {candidate_name}")
+    print(f"Resume length: {len(resume_text):,} characters")
+    print(f"Model: {GEMINI_MODEL}")
+    print(f"{'='*70}\n")
     
-    payload = {
-        "model": model_config["model"],
-        "messages": [
-            {
-                "role": "system", 
-                "content": "You are a resume parser. Return ONLY valid JSON with no additional text, no markdown, no explanations."
-            },
-            {
-                "role": "user", 
-                "content": prompt
-            }
-        ],
-        "stream": False,
-        "temperature": 0.1,
-        "max_tokens": model_config.get("max_tokens", 4000),
-        "top_p": 0.9
-    }
+    print(f"🤖 Sending full resume to Gemini...")
+    
+    prompt = create_original_prompt(resume_text)
+    system_instruction = "You are a resume parser. Return ONLY valid JSON with no additional text, no markdown, no explanations."
+    full_prompt = f"{system_instruction}\n\n{prompt}"
     
     try:
-        response = requests.post(
-            f"{SKYQ_BASE_URL}/api/chat/completions",
-            headers=SKYQ_HEADERS,
-            json=payload,
-            timeout=timeout
-        )
-
-        if response.status_code == 500:
-            raise Exception(f"Ollama server error (500) - model may be overloaded or crashed")
-        elif response.status_code == 404:
-            raise Exception(f"Model not found (404) - check if {model_config['model']} is installed")
-        elif response.status_code == 429:
-            raise Exception(f"Rate limit (429) - too many requests")
-        elif response.status_code != 200:
-            raise Exception(f"API error {response.status_code}: {response.text[:200]}")
+        response = gemini_model.generate_content(full_prompt)
         
-        result = response.json()
-
-        content = (
-            result.get('choices', [{}])[0].get('message', {}).get('content') or 
-            result.get('response', '') or
-            result.get('content', '')
-        )
+        if not response.text:
+            raise Exception("Empty response from Gemini API - model returned no content")
         
-        if not content or not content.strip():
-            raise Exception("Empty response from API - model returned no content")
-        
+        content = response.text.strip()
         parsed = safe_json_parse(content)
         
         if not isinstance(parsed, dict):
@@ -301,88 +285,24 @@ def parse_single_chunk(chunk_text, chunk_description, model_config, timeout=150)
         if not has_basic_data:
             raise Exception("Parsed JSON has no useful data - all fields empty")
         
+        score = score_resume_completeness(parsed)
+        print(f"   ✅ Success! Completeness: {score}/100\n")
+        
         return parsed
         
-    except requests.exceptions.Timeout:
-        raise Exception(f"Request timeout after {timeout}s - model too slow")
-    except requests.exceptions.ConnectionError:
-        raise Exception(f"Connection error - is Ollama running?")
-    except requests.exceptions.RequestException as e:
-        raise Exception(f"Request failed: {str(e)[:100]}")
     except Exception as e:
-        # Re-raise with context
         error_type = type(e).__name__
         error_msg = str(e)[:200]
-        raise Exception(f"{error_type}: {error_msg}")
+        print(f"   ❌ Failed: {error_msg}\n")
+        
+        if retry_count < 3:
+            print(f"⚠️  Retrying... (attempt {retry_count + 2}/4)\n")
+            time.sleep(2)
+            return parse_resume_with_gemini(resume_text, candidate_name, retry_count + 1)
+        
+        raise Exception(f"All attempts failed after {retry_count+1} tries. Error: {error_msg}")
 
-def parse_with_single_pass(resume_text, max_length, retry_count):
-    """Parse resume with all available models"""
-    
-    errors = []
-    best_result = None
-    best_score = 0
-    
-    for idx, config in enumerate(MODEL_CONFIGS):
-        try:
-            print(f"🤖 Model {idx+1}/{len(MODEL_CONFIGS)}: {config['model']}")
-            
-            result = parse_single_chunk(resume_text[:max_length], "complete", config)
-            
-            score = score_resume_completeness(result)
-            print(f"   ✅ Success! Completeness: {score}/100\n")
-            
-            if score > best_score:
-                best_result = result
-                best_score = score
-            
-            if score >= 60:
-                return result
-            
-        except Exception as e:
-            error_msg = str(e)[:200]
-            errors.append(f"{config['model']}: {error_msg}")
-            print(f"   ❌ Failed: {error_msg}\n")
-            
-            if "500" in error_msg or "crashed" in error_msg.lower():
-                print(f"   ⏳ Waiting 5s for Ollama to recover...")
-                time.sleep(5)
-            else:
-                time.sleep(2)
-    
-    if best_result and best_score > 0:
-        print(f"✅ Returning best result (score: {best_score}/100)\n")
-        return best_result
-    
-    if retry_count < 3:
-        print(f"⚠️  All {len(MODEL_CONFIGS)} models failed:")
-        for err in errors:
-            print(f"   - {err}")
-        print(f"\n⚠️  Retrying with smaller chunk size...\n")
-        time.sleep(3)
-        return parse_resume_with_skyq(resume_text, "Retry", retry_count + 1)
-    
-    raise Exception(f"All attempts failed after {retry_count+1} tries. Last errors: {errors[-2:]}")
-
-def parse_resume_with_skyq(resume_text, candidate_name="Unknown", retry_count=0):
-    """Main parsing function"""
-    
-    print(f"\n{'='*70}")
-    print(f"📄 Parsing Resume - Attempt {retry_count + 1}/4")
-    print(f"{'='*70}")
-    print(f"Candidate: {candidate_name}")
-    print(f"Resume length: {len(resume_text):,} characters")
-    
-    max_lengths = [7000, 5000, 3500, 2500]
-    max_length = max_lengths[min(retry_count, len(max_lengths)-1)]
-    
-    print(f"Max chunk size: {max_length:,} characters")
-    print(f"{'='*70}\n")
-    
-    if len(resume_text) > max_length:
-        print(f"⚠️  Resume too long, applying smart truncation\n")
-        resume_text, was_truncated = smart_truncate_resume(resume_text, max_length)
-    
-    return parse_with_single_pass(resume_text, max_length, retry_count)
+parse_resume_with_skyq = parse_resume_with_gemini
 
 def enhance_parsed_data(parsed_data, resume_text):
     
@@ -435,7 +355,6 @@ def enhance_parsed_data(parsed_data, resume_text):
     return parsed_data
 
 def score_resume_completeness(parsed_data):
-    """Score completeness (0-100)"""
     score = 0
     
     if parsed_data.get('name'): score += 5
@@ -463,7 +382,6 @@ def score_resume_completeness(parsed_data):
     return min(score, 100)
 
 def deduplicate_items(items, key_fields):
-    """Remove duplicates"""
     seen = set()
     unique = []
     
@@ -482,7 +400,6 @@ def deduplicate_items(items, key_fields):
     return unique
 
 def merge_parsed_chunks(chunks_results):
-    """Merge multiple chunk results"""
     if not chunks_results:
         return {}
     if len(chunks_results) == 1:
