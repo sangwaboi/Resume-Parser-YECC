@@ -1,6 +1,10 @@
 import json
 import requests
-from config import YECC_BASE_URL, YECC_HEADERS
+import hashlib
+from src.config import config
+
+YECC_BASE_URL = config.YECC_BASE_URL
+YECC_HEADERS = config.get_yecc_headers()
 
 def _get_lookup_id(endpoint, match_text, key_field="Title"):
     try:
@@ -16,19 +20,59 @@ def _get_lookup_id(endpoint, match_text, key_field="Title"):
         return None
 
 
+def _generate_placeholder_phone(email, name):
+    """
+    Generate a unique placeholder phone number when no phone is found.
+    Uses hash of email+name to ensure:
+    1. Same person always gets same placeholder (for deduplication)
+    2. Different people get different placeholders
+    
+    Format: 9XXXXXXXXX (10 digits starting with 9 to look like a valid Indian mobile)
+    """
+    identifier = f"{email.lower()}|{name.lower()}"
+    hash_digest = hashlib.md5(identifier.encode()).hexdigest()
+    # Convert first 9 hex chars to decimal and use as phone digits
+    numeric_part = int(hash_digest[:9], 16) % 900000000 + 100000000
+    placeholder = f"9{numeric_part}"
+    return placeholder
+
+
 def sync_to_yecc_api(parsed_data):
     try:
         print("\n🔄 Syncing to YECC API...")
 
         first_name = parsed_data.get("name", "").split()[0] if parsed_data.get("name") else ""
         last_name = " ".join(parsed_data.get("name", "").split()[1:]) if len(parsed_data.get("name", "").split()) > 1 else ""
+        
+        phone_raw = parsed_data.get("phone", "") or ""
+        phone_cleaned = phone_raw.replace("+", "").replace("-", "").replace(" ", "")[-10:]
+        email = parsed_data.get("email", "") or ""
+        name = parsed_data.get("name", "") or ""
+        
+        if not phone_cleaned and not email and not name:
+            print("⚠️ Cannot sync to YECC: No phone, email, or name available.")
+            return None
+        
+        # Generate placeholder phone if no phone available
+        # YECC API requires unique phone, so we generate one from email+name hash
+        if not phone_cleaned:
+            if email or name:
+                placeholder_phone = _generate_placeholder_phone(email, name)
+                print(f"📱 No phone number found in resume.")
+                print(f"   → Generating unique placeholder: {placeholder_phone}")
+                print(f"   → Based on: email='{email}', name='{name}'")
+                phone_cleaned = placeholder_phone
+            else:
+                print("⚠️ Cannot sync to YECC: No identifiers available for placeholder generation.")
+                return None
+
 
         user_payload = {
             "RoleID": "Trainee",
             "FirstName": first_name,
             "LastName": last_name,
-            "Phone": parsed_data.get("phone", "").replace("+", "").replace("-", "").replace(" ", "")[-10:],
-            "Email": parsed_data.get("email", ""),
+            "Phone": phone_cleaned,
+            "Email": email,
             "City": parsed_data.get("location", "").split(",")[0].strip() if parsed_data.get("location") else "",
             "CountryCode": "India (+91)",
             "Country": "India",
@@ -113,7 +157,7 @@ def sync_to_yecc_api(parsed_data):
         return {
             "user_id": user_id,
             "resume_url": resume_url,
-            "yecc_profile_url": f"https://yecc.tech/Resume/{resume_url}"
+            "yecc_profile_url": f"https://beta.yecc.tech/Resume/{resume_url}"
         }
 
     except Exception as e:
@@ -123,10 +167,13 @@ def sync_to_yecc_api(parsed_data):
 
 def _update_personal_info(parsed_data, resume_url, user_payload, lookups, headers):
     try:
+        phone_raw = parsed_data.get("phone", "") or ""
+        phone_cleaned = phone_raw.replace("+", "").replace("-", "").replace(" ", "")[-10:] if phone_raw else ""
+        
         personal_info_payload = {
-            "EmailID": parsed_data.get("email", ""),
+            "EmailID": parsed_data.get("email", "") or "",
             "MobileNumberCountryCode": "India (+91)",
-            "MobileNumber": parsed_data.get("phone", "").replace("+", "").replace("-", "").replace(" ", "")[-10:],
+            "MobileNumber": phone_cleaned,
             "LinkedInProfileLink": parsed_data.get("linkedin", ""),
             "FirstName": user_payload["FirstName"],
             "LastName": user_payload["LastName"],

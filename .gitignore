@@ -1,6 +1,28 @@
+# Environment
 .env
-/venv
-/docs_for_rag
-/uploads
-/resumes_database.xlsx
-/__pycache__
+venv/
+
+# Database
+resumes.db
+*.db
+
+# Uploads
+uploads/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+DEPLOY.md
+
+# Old files (removed)
+docs_for_rag/
+resumes_database.xlsx

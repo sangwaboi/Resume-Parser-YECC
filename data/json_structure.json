@@ -1,0 +1,54 @@
+{
+    "name": "",
+    "email": "",
+    "phone": "",
+    "location": "",
+    "linkedin": "",
+    "summary": "",
+    "total_years_experience": "",
+    "current_role": "",
+    "current_company": "",
+    "erp_systems": [],
+    "erp_modules": [],
+    "technical_skills": [],
+    "certifications": [],
+    "languages": [],
+    "education": [
+        {
+            "degree": "",
+            "university": "",
+            "year": ""
+        }
+    ],
+    "job_experience": [
+        {
+            "position": "",
+            "country": "",
+            "company_name": "",
+            "employment_type": "",
+            "currently_working_here": false,
+            "from_date": "",
+            "to_date": "",
+            "short_description": ""
+        }
+    ],
+    "erp_projects_experience": [
+        {
+            "company_name": "",
+            "project_name": "",
+            "project_domain": "",
+            "project_type": [],
+            "currently_working_on_this_project": false,
+            "from_date": "",
+            "to_date": "",
+            "project_phases_involved": [],
+            "work_location_type": [],
+            "product": "",
+            "track": "",
+            "financials_modules": [],
+            "hcm_modules": [],
+            "scm_modules": [],
+            "role": ""
+        }
+    ]
+}

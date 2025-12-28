@@ -1,352 +1,815 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YourERPCoach - Resume Upload</title>
+    <title>Upload Resume - YECC Parser</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --secondary: #ec4899;
+            --accent: #06b6d4;
+            --success: #22c55e;
+            --error: #ef4444;
+            --dark: #0f172a;
+            --dark-light: #1e293b;
+            --gray: #64748b;
+            --light: #f1f5f9;
+            --white: #ffffff;
+            --gradient: linear-gradient(135deg, #6366f1 0%, #ec4899 50%, #06b6d4 100%);
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--dark);
+            min-height: 100vh;
+            color: var(--white);
+        }
+
+        /* Background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: var(--dark);
+        }
+
+        .bg-animation::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(236, 72, 153, 0.1) 0%, transparent 50%);
+            animation: bgFloat 20s ease-in-out infinite;
+        }
+
+        @keyframes bgFloat {
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            50% {
+                transform: translate(30px, -30px);
+            }
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            backdrop-filter: blur(20px);
+            background: rgba(15, 23, 42, 0.8);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: 700;
+            text-decoration: none;
+            color: var(--white);
+        }
+
+        .nav-logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .nav-logo span {
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-link {
+            padding: 10px 20px;
+            color: var(--gray);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--white);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-link.active {
+            background: rgba(99, 102, 241, 0.2);
+        }
+
+        /* Main Content */
+        .main {
             min-height: 100vh;
             display: flex;
-            justify-content: center;
             align-items: center;
-            padding: 20px;
+            justify-content: center;
+            padding: 100px 20px 40px;
         }
-        
-        .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            padding: 40px;
-            max-width: 600px;
+
+        .upload-container {
             width: 100%;
+            max-width: 600px;
         }
-        
-        .header {
+
+        .page-header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
         }
-        
-        .logo {
+
+        .page-title {
             font-size: 32px;
-            font-weight: bold;
-            color: #667eea;
-            margin-bottom: 10px;
+            font-weight: 700;
+            margin-bottom: 12px;
         }
-        
-        .subtitle {
-            color: #666;
+
+        .page-title .gradient {
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-subtitle {
+            color: var(--gray);
             font-size: 16px;
         }
-        
-        .upload-area {
-            border: 3px dashed #667eea;
-            border-radius: 15px;
-            padding: 50px 20px;
+
+        /* Upload Card */
+        .upload-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 24px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Dropzone */
+        .dropzone {
+            border: 2px dashed rgba(99, 102, 241, 0.4);
+            border-radius: 16px;
+            padding: 60px 40px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.3s;
-            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
-        
-        .upload-area:hover {
-            background: #f8f9ff;
-            border-color: #764ba2;
+
+        .dropzone::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--gradient);
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
-        
-        .upload-icon {
-            font-size: 48px;
-            color: #667eea;
-            margin-bottom: 15px;
+
+        .dropzone:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.05);
         }
-        
-        .upload-text {
-            color: #333;
+
+        .dropzone.dragover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .dropzone.dragover::before {
+            opacity: 0.05;
+        }
+
+        .dropzone-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            position: relative;
+        }
+
+        .dropzone-title {
             font-size: 18px;
-            margin-bottom: 10px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            position: relative;
         }
-        
-        .upload-hint {
-            color: #999;
+
+        .dropzone-hint {
+            color: var(--gray);
             font-size: 14px;
+            position: relative;
         }
-        
+
+        .dropzone-formats {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 16px;
+            position: relative;
+        }
+
+        .format-badge {
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--gray);
+            font-weight: 500;
+        }
+
         #fileInput {
             display: none;
         }
-        
+
+        /* File Info */
         .file-info {
-            background: #f8f9ff;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
             display: none;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-top: 20px;
         }
-        
+
+        .file-info.show {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .file-icon {
+            width: 44px;
+            height: 44px;
+            background: var(--primary);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .file-details {
+            flex: 1;
+        }
+
         .file-name {
-            color: #333;
-            font-weight: 500;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 2px;
         }
-        
+
+        .file-size {
+            color: var(--gray);
+            font-size: 12px;
+        }
+
+        .file-remove {
+            width: 32px;
+            height: 32px;
+            background: rgba(239, 68, 68, 0.1);
+            border: none;
+            border-radius: 8px;
+            color: var(--error);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+
+        .file-remove:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        /* Submit Button */
         .btn-submit {
             width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            padding: 18px;
+            margin-top: 24px;
+            background: var(--gradient);
+            color: var(--white);
             border: none;
-            border-radius: 10px;
+            border-radius: 14px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 40px rgba(99, 102, 241, 0.3);
         }
-        
-        .btn-submit:hover {
+
+        .btn-submit:hover:not(:disabled) {
             transform: translateY(-2px);
+            box-shadow: 0 15px 50px rgba(99, 102, 241, 0.4);
         }
-        
+
         .btn-submit:disabled {
-            opacity: 0.6;
+            opacity: 0.5;
             cursor: not-allowed;
+            transform: none;
         }
-        
+
+        /* Loading State */
         .loading {
-            text-align: center;
             display: none;
-            margin: 20px 0;
+            text-align: center;
+            padding: 40px;
         }
-        
+
+        .loading.show {
+            display: block;
+        }
+
         .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(99, 102, 241, 0.2);
+            border-top-color: var(--primary);
             border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-text {
+            color: var(--gray);
+            font-size: 14px;
+        }
+
+        .loading-step {
+            color: var(--primary-light);
+            font-weight: 500;
+            margin-top: 8px;
+        }
+
+        /* Result */
+        .result {
+            display: none;
+            margin-top: 24px;
+            padding: 20px;
+            border-radius: 14px;
+        }
+
+        .result.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result.success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        .result.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .result-icon {
             width: 40px;
             height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .result {
-            margin-top: 20px;
-            padding: 20px;
             border-radius: 10px;
-            display: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
         }
-        
-        .result.success {
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
+
+        .result.success .result-icon {
+            background: rgba(34, 197, 94, 0.2);
         }
-        
-        .result.error {
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
+
+        .result.error .result-icon {
+            background: rgba(239, 68, 68, 0.2);
         }
-        
-        .nav-links {
-            text-align: center;
-            margin-top: 20px;
-        }
-        
-        .nav-links a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 500;
-            margin: 0 10px;
-        }
-        
-        .nav-links a:hover {
-            text-decoration: underline;
-        }
-        
-        .parsed-data {
-            background: #f8f9ff;
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 15px;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        
-        .data-field {
-            margin-bottom: 10px;
-        }
-        
-        .data-label {
+
+        .result-title {
+            font-size: 16px;
             font-weight: 600;
-            color: #667eea;
         }
-        
+
+        .result.success .result-title {
+            color: var(--success);
+        }
+
+        .result.error .result-title {
+            color: var(--error);
+        }
+
+        /* Parsed Data */
+        .parsed-data {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 16px;
+        }
+
+        .parsed-data h4 {
+            font-size: 14px;
+            color: var(--gray);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .data-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .data-label {
+            width: 120px;
+            color: var(--gray);
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+
         .data-value {
-            color: #333;
-            margin-left: 10px;
+            font-size: 13px;
+            color: var(--white);
+            flex: 1;
+        }
+
+        .data-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .data-tag {
+            padding: 4px 10px;
+            background: rgba(99, 102, 241, 0.15);
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--primary-light);
+        }
+
+        /* YECC Link */
+        .yecc-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 16px;
+            padding: 12px 20px;
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            border-radius: 10px;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .yecc-link:hover {
+            background: rgba(6, 182, 212, 0.15);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav {
+                padding: 15px 20px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .upload-card {
+                padding: 24px;
+            }
+
+            .dropzone {
+                padding: 40px 20px;
+            }
         }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="logo">📄 YourERPCoach</div>
-            <div class="subtitle">Upload Your ERP Consultant Resume</div>
-        </div>
-        
-        <div class="upload-area" id="uploadArea">
-            <div class="upload-icon">☁️</div>
-            <div class="upload-text">Click to upload or drag and drop</div>
-            <div class="upload-hint">PDF or Word documents (Max 16MB)</div>
-        </div>
-        
-        <input type="file" id="fileInput" accept=".pdf,.doc,.docx">
-        
-        <div class="file-info" id="fileInfo">
-            <div class="file-name" id="fileName"></div>
-        </div>
-        
-        <button class="btn-submit" id="submitBtn" disabled>Upload & Parse Resume</button>
-        
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p style="margin-top: 15px; color: #667eea;">Parsing your resume with AI...</p>
-        </div>
-        
-        <div class="result" id="result"></div>
-        
+    <div class="bg-animation"></div>
+
+    <nav class="nav">
+        <a href="/" class="nav-logo">
+            <div class="nav-logo-icon">⚡</div>
+            <span>YECC Parser</span>
+        </a>
         <div class="nav-links">
-            <a href="/">🏠 Home</a>
-            <a href="/download-database">📥 Download Database</a>
+            <a href="/" class="nav-link">Home</a>
+            <a href="/resume" class="nav-link active">Upload</a>
+            <a href="/search" class="nav-link">Search</a>
         </div>
-    </div>
-    
+    </nav>
+
+    <main class="main">
+        <div class="upload-container">
+            <div class="page-header">
+                <h1 class="page-title">Upload <span class="gradient">Resume</span></h1>
+                <p class="page-subtitle">AI-powered parsing for ERP consultant resumes</p>
+            </div>
+
+            <div class="upload-card">
+                <div class="dropzone" id="dropzone">
+                    <div class="dropzone-icon">📄</div>
+                    <h3 class="dropzone-title">Drop your resume here</h3>
+                    <p class="dropzone-hint">or click to browse files</p>
+                    <div class="dropzone-formats">
+                        <span class="format-badge">PDF</span>
+                        <span class="format-badge">DOCX</span>
+                        <span class="format-badge">Max 16MB</span>
+                    </div>
+                </div>
+
+                <input type="file" id="fileInput" accept=".pdf,.doc,.docx">
+
+                <div class="file-info" id="fileInfo">
+                    <div class="file-icon">📄</div>
+                    <div class="file-details">
+                        <div class="file-name" id="fileName"></div>
+                        <div class="file-size" id="fileSize"></div>
+                    </div>
+                    <button class="file-remove" id="fileRemove">✕</button>
+                </div>
+
+                <button class="btn-submit" id="submitBtn" disabled>
+                    <span>🚀</span>
+                    Parse Resume with AI
+                </button>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p class="loading-text">Parsing your resume...</p>
+                    <p class="loading-step" id="loadingStep">Extracting text</p>
+                </div>
+
+                <div class="result" id="result"></div>
+            </div>
+        </div>
+    </main>
+
     <script>
-        const uploadArea = document.getElementById('uploadArea');
+        const dropzone = document.getElementById('dropzone');
         const fileInput = document.getElementById('fileInput');
         const fileInfo = document.getElementById('fileInfo');
         const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const fileRemove = document.getElementById('fileRemove');
         const submitBtn = document.getElementById('submitBtn');
         const loading = document.getElementById('loading');
+        const loadingStep = document.getElementById('loadingStep');
         const result = document.getElementById('result');
-        
+
         let selectedFile = null;
-        
-        uploadArea.addEventListener('click', () => fileInput.click());
-        
-        uploadArea.addEventListener('dragover', (e) => {
+
+        // Dropzone events
+        dropzone.addEventListener('click', () => fileInput.click());
+
+        dropzone.addEventListener('dragover', (e) => {
             e.preventDefault();
-            uploadArea.style.background = '#f8f9ff';
+            dropzone.classList.add('dragover');
         });
-        
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.style.background = '';
+
+        dropzone.addEventListener('dragleave', () => {
+            dropzone.classList.remove('dragover');
         });
-        
-        uploadArea.addEventListener('drop', (e) => {
+
+        dropzone.addEventListener('drop', (e) => {
             e.preventDefault();
-            uploadArea.style.background = '';
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                handleFile(files[0]);
+            dropzone.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                handleFile(e.dataTransfer.files[0]);
             }
         });
-        
+
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
                 handleFile(e.target.files[0]);
             }
         });
-        
+
+        fileRemove.addEventListener('click', resetForm);
+
         function handleFile(file) {
             const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'];
-            
+
             if (!validTypes.includes(file.type)) {
-                showResult('Please upload a PDF or Word document', 'error');
+                showError('Please upload a PDF or Word document');
                 return;
             }
-            
+
+            if (file.size > 16 * 1024 * 1024) {
+                showError('File size must be under 16MB');
+                return;
+            }
+
             selectedFile = file;
-            fileName.textContent = `📄 ${file.name}`;
-            fileInfo.style.display = 'block';
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            fileInfo.classList.add('show');
+            dropzone.style.display = 'none';
             submitBtn.disabled = false;
-            result.style.display = 'none';
+            result.classList.remove('show');
         }
-        
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        function resetForm() {
+            selectedFile = null;
+            fileInput.value = '';
+            fileInfo.classList.remove('show');
+            dropzone.style.display = 'block';
+            submitBtn.disabled = true;
+        }
+
         submitBtn.addEventListener('click', uploadResume);
-        
+
         async function uploadResume() {
             if (!selectedFile) return;
-            
+
             const formData = new FormData();
             formData.append('resume', selectedFile);
-            
+
             submitBtn.disabled = true;
-            loading.style.display = 'block';
-            result.style.display = 'none';
-            
+            loading.classList.add('show');
+            result.classList.remove('show');
+
+            const steps = ['Extracting text...', 'Analyzing with AI...', 'Syncing to YECC...', 'Finalizing...'];
+            let stepIndex = 0;
+            const stepInterval = setInterval(() => {
+                if (stepIndex < steps.length) {
+                    loadingStep.textContent = steps[stepIndex];
+                    stepIndex++;
+                }
+            }, 3000);
+
             try {
                 const response = await fetch('/upload', {
                     method: 'POST',
                     body: formData
                 });
-                
+
                 const data = await response.json();
-                
+                clearInterval(stepInterval);
+
                 if (data.success) {
-                    showResult('✅ Resume parsed and saved successfully!', 'success');
-                    displayParsedData(data.data);
-                    resetForm();
+                    showSuccess(data.data);
                 } else {
-                    showResult(`❌ Error: ${data.error}`, 'error');
+                    showError(data.error);
                 }
             } catch (error) {
-                showResult(`❌ Error: ${error.message}`, 'error');
+                clearInterval(stepInterval);
+                showError(error.message);
             } finally {
-                loading.style.display = 'none';
+                loading.classList.remove('show');
                 submitBtn.disabled = false;
             }
         }
-        
-        function displayParsedData(data) {
-            const parsedDataHTML = `
-                <div class="parsed-data">
-                    <h3 style="margin-bottom: 15px; color: #667eea;">Parsed Information:</h3>
-                    <div class="data-field"><span class="data-label">Name:</span><span class="data-value">${data.name || 'N/A'}</span></div>
-                    <div class="data-field"><span class="data-label">Email:</span><span class="data-value">${data.email || 'N/A'}</span></div>
-                    <div class="data-field"><span class="data-label">Phone:</span><span class="data-value">${data.phone || 'N/A'}</span></div>
-                    <div class="data-field"><span class="data-label">Current Role:</span><span class="data-value">${data.current_role || 'N/A'}</span></div>
-                    <div class="data-field"><span class="data-label">ERP Systems:</span><span class="data-value">${data.erp_systems.join(', ') || 'N/A'}</span></div>
-                    <div class="data-field"><span class="data-label">ERP Modules:</span><span class="data-value">${data.erp_modules.join(', ') || 'N/A'}</span></div>
-                    <div class="data-field"><span class="data-label">Skills:</span><span class="data-value">${data.technical_skills.join(', ') || 'N/A'}</span></div>
+
+        function showSuccess(data) {
+            const yeccLink = data._yecc_profile_url
+                ? `<a href="${data._yecc_profile_url}" target="_blank" class="yecc-link">🔗 View on YECC Platform</a>`
+                : '';
+
+            result.className = 'result success show';
+            result.innerHTML = `
+                <div class="result-header">
+                    <div class="result-icon">✓</div>
+                    <div class="result-title">Resume parsed successfully!</div>
                 </div>
+                <div class="parsed-data">
+                    <h4>Extracted Information</h4>
+                    <div class="data-grid">
+                        <div class="data-row">
+                            <div class="data-label">Name</div>
+                            <div class="data-value">${data.name || 'N/A'}</div>
+                        </div>
+                        <div class="data-row">
+                            <div class="data-label">Email</div>
+                            <div class="data-value">${data.email || 'N/A'}</div>
+                        </div>
+                        <div class="data-row">
+                            <div class="data-label">Role</div>
+                            <div class="data-value">${data.current_role || 'N/A'}</div>
+                        </div>
+                        <div class="data-row">
+                            <div class="data-label">ERP Systems</div>
+                            <div class="data-value">
+                                <div class="data-tags">
+                                    ${(data.erp_systems || []).map(s => `<span class="data-tag">${s}</span>`).join('') || 'N/A'}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="data-row">
+                            <div class="data-label">Modules</div>
+                            <div class="data-value">
+                                <div class="data-tags">
+                                    ${(data.erp_modules || []).slice(0, 8).map(m => `<span class="data-tag">${m}</span>`).join('') || 'N/A'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                ${yeccLink}
             `;
-            result.innerHTML += parsedDataHTML;
+            resetForm();
         }
-        
-        function showResult(message, type) {
-            result.textContent = message;
-            result.className = `result ${type}`;
-            result.style.display = 'block';
-        }
-        
-        function resetForm() {
-            selectedFile = null;
-            fileInput.value = '';
-            fileInfo.style.display = 'none';
-            submitBtn.disabled = true;
+
+        function showError(message) {
+            result.className = 'result error show';
+            result.innerHTML = `
+                <div class="result-header">
+                    <div class="result-icon">✕</div>
+                    <div class="result-title">Upload failed</div>
+                </div>
+                <p style="color: var(--gray); font-size: 14px;">${message}</p>
+            `;
         }
     </script>
 </body>
+
 </html>

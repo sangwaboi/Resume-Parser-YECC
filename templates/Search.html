@@ -1,307 +1,595 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YourERPCoach - Search Candidates</title>
+    <title>Search Candidates - YECC Parser</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --secondary: #ec4899;
+            --accent: #06b6d4;
+            --success: #22c55e;
+            --error: #ef4444;
+            --dark: #0f172a;
+            --dark-light: #1e293b;
+            --gray: #64748b;
+            --light: #f1f5f9;
+            --white: #ffffff;
+            --gradient: linear-gradient(135deg, #6366f1 0%, #ec4899 50%, #06b6d4 100%);
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--dark);
             min-height: 100vh;
-            padding: 20px;
+            color: var(--white);
         }
-        
-        .container {
-            max-width: 1200px;
+
+        /* Background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: var(--dark);
+        }
+
+        .bg-animation::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 20% 80%, rgba(6, 182, 212, 0.08) 0%, transparent 50%);
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            backdrop-filter: blur(20px);
+            background: rgba(15, 23, 42, 0.8);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: 700;
+            text-decoration: none;
+            color: var(--white);
+        }
+
+        .nav-logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .nav-logo span {
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-link {
+            padding: 10px 20px;
+            color: var(--gray);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--white);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-link.active {
+            background: rgba(99, 102, 241, 0.2);
+        }
+
+        /* Main Content */
+        .main {
+            padding: 100px 40px 40px;
+            max-width: 1400px;
             margin: 0 auto;
         }
-        
-        .header {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        
-        .logo {
-            font-size: 28px;
-            font-weight: bold;
-            color: #667eea;
-            margin-bottom: 5px;
-        }
-        
-        .subtitle {
-            color: #666;
-        }
-        
+
+        /* Search Section */
         .search-section {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 32px;
         }
-        
+
+        .search-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .search-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(99, 102, 241, 0.15);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
         .search-title {
-            font-size: 20px;
-            color: #333;
-            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: 700;
         }
-        
+
         .search-box {
             display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
+            gap: 12px;
         }
-        
-        .search-input {
+
+        .search-input-wrapper {
             flex: 1;
-            padding: 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: border-color 0.3s;
+            position: relative;
         }
-        
+
+        .search-input {
+            width: 100%;
+            padding: 18px 24px;
+            padding-left: 52px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            font-size: 16px;
+            color: var(--white);
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .search-input::placeholder {
+            color: var(--gray);
+        }
+
         .search-input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.08);
         }
-        
+
+        .search-input-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            color: var(--gray);
+        }
+
         .btn-search {
-            padding: 15px 30px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            padding: 18px 32px;
+            background: var(--gradient);
+            color: var(--white);
             border: none;
-            border-radius: 10px;
+            border-radius: 14px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 40px rgba(99, 102, 241, 0.3);
+            white-space: nowrap;
         }
-        
+
         .btn-search:hover {
             transform: translateY(-2px);
+            box-shadow: 0 15px 50px rgba(99, 102, 241, 0.4);
         }
-        
+
         .search-examples {
-            color: #666;
-            font-size: 14px;
-            margin-top: 10px;
+            margin-top: 16px;
+            color: var(--gray);
+            font-size: 13px;
         }
-        
+
         .search-examples strong {
-            color: #667eea;
+            color: var(--primary-light);
         }
-        
+
+        .example-tag {
+            display: inline-block;
+            padding: 4px 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            margin: 4px 4px 4px 0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .example-tag:hover {
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--white);
+        }
+
+        /* Loading */
         .loading {
-            text-align: center;
-            padding: 40px;
             display: none;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+            padding: 80px 40px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
         }
-        
+
+        .loading.show {
+            display: block;
+        }
+
         .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(99, 102, 241, 0.2);
+            border-top-color: var(--primary);
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
+            margin: 0 auto 20px;
         }
-        
+
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
-        
+
+        .loading-text {
+            color: var(--gray);
+            font-size: 14px;
+        }
+
+        /* Results */
         .results-section {
             display: none;
         }
-        
-        .results-header {
-            background: white;
-            border-radius: 15px;
-            padding: 20px 30px;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+
+        .results-section.show {
+            display: block;
         }
-        
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
         .results-count {
             font-size: 18px;
-            color: #333;
+            color: var(--gray);
         }
-        
+
         .results-count strong {
-            color: #667eea;
+            color: var(--primary-light);
         }
-        
-        .resume-card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
+
+        .results-query {
+            color: var(--white);
+        }
+
+        /* Candidate Card */
+        .candidate-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            padding: 28px;
             margin-bottom: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            transition: transform 0.3s;
+            transition: all 0.3s ease;
         }
-        
-        .resume-card:hover {
-            transform: translateY(-5px);
+
+        .candidate-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
         }
-        
+
         .card-header {
             display: flex;
             justify-content: space-between;
-            align-items: start;
-            margin-bottom: 15px;
+            align-items: flex-start;
+            margin-bottom: 20px;
         }
-        
-        .candidate-name {
-            font-size: 22px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
+
+        .candidate-info {
+            display: flex;
+            gap: 16px;
         }
-        
+
+        .candidate-avatar {
+            width: 56px;
+            height: 56px;
+            background: var(--gradient);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--white);
+        }
+
+        .candidate-details h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
         .candidate-role {
-            color: #667eea;
-            font-size: 16px;
+            color: var(--primary-light);
+            font-size: 14px;
+            font-weight: 500;
         }
-        
-        .relevance-badge {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-weight: 600;
+
+        .match-badge {
+            padding: 10px 18px;
+            background: var(--gradient);
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
         }
-        
-        .card-section {
-            margin-bottom: 15px;
+
+        .card-body {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
         }
-        
-        .section-label {
-            font-weight: 600;
-            color: #667eea;
-            margin-bottom: 5px;
+
+        .card-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
         }
-        
-        .section-value {
-            color: #333;
-            line-height: 1.6;
+
+        .field-label {
+            color: var(--gray);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-        
+
+        .field-value {
+            font-size: 14px;
+        }
+
         .tags {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 5px;
+            gap: 6px;
         }
-        
+
         .tag {
-            background: #f8f9ff;
-            color: #667eea;
             padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 14px;
+            background: rgba(99, 102, 241, 0.15);
+            border-radius: 8px;
+            font-size: 12px;
+            color: var(--primary-light);
         }
-        
+
+        .tag.cyan {
+            background: rgba(6, 182, 212, 0.15);
+            color: var(--accent);
+        }
+
+        .tag.pink {
+            background: rgba(236, 72, 153, 0.15);
+            color: var(--secondary);
+        }
+
         .match-reason {
-            background: #f8f9ff;
-            padding: 15px;
-            border-radius: 10px;
-            border-left: 4px solid #667eea;
-            margin-top: 15px;
+            margin-top: 20px;
+            padding: 16px;
+            background: rgba(99, 102, 241, 0.08);
+            border-left: 3px solid var(--primary);
+            border-radius: 0 10px 10px 0;
         }
-        
+
+        .match-reason strong {
+            color: var(--primary-light);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .match-reason p {
+            margin-top: 4px;
+            color: var(--gray);
+            font-size: 13px;
+        }
+
+        .yecc-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 16px;
+            padding: 10px 16px;
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            border-radius: 8px;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .yecc-link:hover {
+            background: rgba(6, 182, 212, 0.15);
+        }
+
+        /* No Results */
         .no-results {
-            background: white;
-            border-radius: 15px;
-            padding: 40px;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 80px 40px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
         }
-        
+
         .no-results-icon {
             font-size: 64px;
             margin-bottom: 20px;
         }
-        
-        .nav-links {
-            text-align: center;
-            margin-top: 20px;
+
+        .no-results h3 {
+            font-size: 20px;
+            margin-bottom: 8px;
         }
-        
-        .nav-links a {
-            background: white;
-            color: #667eea;
-            text-decoration: none;
-            padding: 12px 25px;
-            border-radius: 10px;
-            font-weight: 600;
-            margin: 0 10px;
-            display: inline-block;
+
+        .no-results p {
+            color: var(--gray);
+            font-size: 14px;
         }
-        
-        .nav-links a:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav {
+                padding: 15px 20px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .main {
+                padding: 90px 16px 30px;
+            }
+
+            .search-section {
+                padding: 20px;
+            }
+
+            .search-box {
+                flex-direction: column;
+            }
+
+            .candidate-card {
+                padding: 20px;
+            }
+
+            .card-header {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .match-badge {
+                align-self: flex-start;
+            }
         }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="logo">🔍 YourERPCoach</div>
-            <div class="subtitle">Search ERP Consultant Candidates</div>
+    <div class="bg-animation"></div>
+
+    <nav class="nav">
+        <a href="/" class="nav-logo">
+            <div class="nav-logo-icon">⚡</div>
+            <span>YECC Parser</span>
+        </a>
+        <div class="nav-links">
+            <a href="/" class="nav-link">Home</a>
+            <a href="/resume" class="nav-link">Upload</a>
+            <a href="/search" class="nav-link active">Search</a>
         </div>
-        
+    </nav>
+
+    <main class="main">
         <div class="search-section">
-            <h2 class="search-title">Find the Perfect Candidate</h2>
-            <div class="search-box">
-                <input 
-                    type="text" 
-                    class="search-input" 
-                    id="searchInput" 
-                    placeholder="e.g., SAP FI consultant with 5 years experience"
-                >
-                <button class="btn-search" id="searchBtn">🔍 Search</button>
+            <div class="search-header">
+                <div class="search-icon">🔍</div>
+                <h1 class="search-title">Find Candidates</h1>
             </div>
+
+            <div class="search-box">
+                <div class="search-input-wrapper">
+                    <span class="search-input-icon">🔎</span>
+                    <input type="text" class="search-input" id="searchInput"
+                        placeholder="Search by skills, ERP system, modules, or experience...">
+                </div>
+                <button class="btn-search" id="searchBtn">
+                    <span>⚡</span>
+                    Search
+                </button>
+            </div>
+
             <div class="search-examples">
-                <strong>Examples:</strong> "SAP MM module expert" | "Oracle ERP with SQL skills" | "Microsoft Dynamics consultant in New York"
+                <strong>Try:</strong>
+                <span class="example-tag" onclick="setQuery('SAP FICO consultant')">SAP FICO consultant</span>
+                <span class="example-tag" onclick="setQuery('Oracle HCM 5 years')">Oracle HCM 5 years</span>
+                <span class="example-tag" onclick="setQuery('GL AP AR modules')">GL AP AR modules</span>
+                <span class="example-tag" onclick="setQuery('Fusion Cloud ERP')">Fusion Cloud ERP</span>
             </div>
         </div>
-        
+
         <div class="loading" id="loading">
             <div class="spinner"></div>
-            <p style="color: #667eea; font-weight: 600;">Searching with AI...</p>
+            <p class="loading-text">Searching with AI...</p>
         </div>
-        
+
         <div class="results-section" id="resultsSection">
             <div class="results-header">
                 <div class="results-count" id="resultsCount"></div>
             </div>
             <div id="resultsContainer"></div>
         </div>
-        
-        <div class="nav-links">
-            <a href="/">🏠 Home</a>
-            <a href="/resume">📤 Upload Resume</a>
-            <a href="/download-database">📥 Download Database</a>
-        </div>
-    </div>
-    
+    </main>
+
     <script>
         const searchInput = document.getElementById('searchInput');
         const searchBtn = document.getElementById('searchBtn');
@@ -309,34 +597,37 @@
         const resultsSection = document.getElementById('resultsSection');
         const resultsCount = document.getElementById('resultsCount');
         const resultsContainer = document.getElementById('resultsContainer');
-        
+
+        function setQuery(query) {
+            searchInput.value = query;
+            performSearch();
+        }
+
         searchBtn.addEventListener('click', performSearch);
         searchInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') performSearch();
         });
-        
+
         async function performSearch() {
             const query = searchInput.value.trim();
-            
+
             if (!query) {
                 alert('Please enter a search query');
                 return;
             }
-            
-            loading.style.display = 'block';
-            resultsSection.style.display = 'none';
-            
+
+            loading.classList.add('show');
+            resultsSection.classList.remove('show');
+
             try {
                 const response = await fetch('/search', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ query })
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (data.success) {
                     displayResults(data.results, query);
                 } else {
@@ -345,90 +636,104 @@
             } catch (error) {
                 showError(error.message);
             } finally {
-                loading.style.display = 'none';
+                loading.classList.remove('show');
             }
         }
-        
+
         function displayResults(results, query) {
-            resultsSection.style.display = 'block';
-            
+            resultsSection.classList.add('show');
+
             if (results.length === 0) {
+                resultsCount.innerHTML = '';
                 resultsContainer.innerHTML = `
                     <div class="no-results">
-                        <div class="no-results-icon">😔</div>
+                        <div class="no-results-icon">🔍</div>
                         <h3>No candidates found</h3>
-                        <p>Try a different search query</p>
+                        <p>Try adjusting your search terms or upload more resumes</p>
                     </div>
                 `;
-                resultsCount.innerHTML = `Found <strong>0</strong> candidates for "${query}"`;
                 return;
             }
-            
-            resultsCount.innerHTML = `Found <strong>${results.length}</strong> candidate${results.length > 1 ? 's' : ''} for "${query}"`;
-            
-            resultsContainer.innerHTML = results.map(candidate => `
-                <div class="resume-card">
-                    <div class="card-header">
-                        <div>
-                            <div class="candidate-name">${candidate.Name || 'N/A'}</div>
-                            <div class="candidate-role">${candidate.Current_Role || 'N/A'}</div>
+
+            resultsCount.innerHTML = `Found <strong>${results.length}</strong> candidate${results.length > 1 ? 's' : ''} for "<span class="results-query">${query}</span>"`;
+
+            resultsContainer.innerHTML = results.map(candidate => {
+                const initials = (candidate.Name || 'N A').split(' ').map(n => n[0]).join('').substring(0, 2);
+                const erpSystems = (candidate.ERP_Systems || '').split(',').filter(s => s.trim());
+                const erpModules = (candidate.ERP_Modules || '').split(',').filter(m => m.trim());
+                const skills = (candidate.Technical_Skills || '').split(',').filter(s => s.trim()).slice(0, 6);
+
+                const yeccLink = candidate.YECC_Profile_URL
+                    ? `<a href="${candidate.YECC_Profile_URL}" target="_blank" class="yecc-link">🔗 View YECC Profile</a>`
+                    : '';
+
+                return `
+                    <div class="candidate-card">
+                        <div class="card-header">
+                            <div class="candidate-info">
+                                <div class="candidate-avatar">${initials}</div>
+                                <div class="candidate-details">
+                                    <h3>${candidate.Name || 'Unknown'}</h3>
+                                    <div class="candidate-role">${candidate.Current_Role || 'ERP Consultant'}</div>
+                                </div>
+                            </div>
+                            <div class="match-badge">${candidate.relevance_score || 80}% Match</div>
                         </div>
-                        <div class="relevance-badge">${candidate.relevance_score}% Match</div>
-                    </div>
-                    
-                    <div class="card-section">
-                        <div class="section-label">📧 Contact</div>
-                        <div class="section-value">
-                            ${candidate.Email || 'N/A'} | ${candidate.Phone || 'N/A'}
+                        
+                        <div class="card-body">
+                            <div class="card-field">
+                                <div class="field-label">📧 Contact</div>
+                                <div class="field-value">${candidate.Email || 'N/A'}</div>
+                            </div>
+                            <div class="card-field">
+                                <div class="field-label">🏢 Company</div>
+                                <div class="field-value">${candidate.Current_Company || 'N/A'}</div>
+                            </div>
+                            <div class="card-field">
+                                <div class="field-label">⏱️ Experience</div>
+                                <div class="field-value">${candidate.Total_Years_Experience || 'N/A'} years</div>
+                            </div>
+                            <div class="card-field">
+                                <div class="field-label">📍 Location</div>
+                                <div class="field-value">${candidate.Location || 'N/A'}</div>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="card-section">
-                        <div class="section-label">🏢 Current Company</div>
-                        <div class="section-value">${candidate.Current_Company || 'N/A'}</div>
-                    </div>
-                    
-                    <div class="card-section">
-                        <div class="section-label">⏱️ Experience</div>
-                        <div class="section-value">${candidate.Total_Years_Experience || 'N/A'} years</div>
-                    </div>
-                    
-                    <div class="card-section">
-                        <div class="section-label">💼 ERP Systems</div>
-                        <div class="tags">
-                            ${(candidate.ERP_Systems || '').split(',').filter(s => s.trim()).map(system => 
-                                `<span class="tag">${system.trim()}</span>`
-                            ).join('')}
+                        
+                        <div class="card-body" style="margin-top: 16px;">
+                            <div class="card-field">
+                                <div class="field-label">💼 ERP Systems</div>
+                                <div class="tags">
+                                    ${erpSystems.map(s => `<span class="tag pink">${s.trim()}</span>`).join('') || '<span class="field-value">N/A</span>'}
+                                </div>
+                            </div>
+                            <div class="card-field">
+                                <div class="field-label">📦 Modules</div>
+                                <div class="tags">
+                                    ${erpModules.slice(0, 6).map(m => `<span class="tag">${m.trim()}</span>`).join('') || '<span class="field-value">N/A</span>'}
+                                </div>
+                            </div>
+                            <div class="card-field">
+                                <div class="field-label">🛠️ Skills</div>
+                                <div class="tags">
+                                    ${skills.map(s => `<span class="tag cyan">${s.trim()}</span>`).join('') || '<span class="field-value">N/A</span>'}
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="card-section">
-                        <div class="section-label">📦 ERP Modules</div>
-                        <div class="tags">
-                            ${(candidate.ERP_Modules || '').split(',').filter(m => m.trim()).map(module => 
-                                `<span class="tag">${module.trim()}</span>`
-                            ).join('')}
+                        
+                        <div class="match-reason">
+                            <strong>Why this match</strong>
+                            <p>${candidate.match_reason || 'Relevant skills and experience match your search criteria'}</p>
                         </div>
+                        
+                        ${yeccLink}
                     </div>
-                    
-                    <div class="card-section">
-                        <div class="section-label">🛠️ Technical Skills</div>
-                        <div class="tags">
-                            ${(candidate.Technical_Skills || '').split(',').filter(s => s.trim()).slice(0, 10).map(skill => 
-                                `<span class="tag">${skill.trim()}</span>`
-                            ).join('')}
-                        </div>
-                    </div>
-                    
-                    <div class="match-reason">
-                        <strong>Why this match:</strong> ${candidate.match_reason || 'Relevant experience and skills'}
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
-        
+
         function showError(message) {
-            resultsSection.style.display = 'block';
+            resultsSection.classList.add('show');
+            resultsCount.innerHTML = '<strong>Error</strong>';
             resultsContainer.innerHTML = `
                 <div class="no-results">
                     <div class="no-results-icon">❌</div>
@@ -436,8 +741,8 @@
                     <p>${message}</p>
                 </div>
             `;
-            resultsCount.innerHTML = '<strong>Error</strong> occurred during search';
         }
     </script>
 </body>
+
 </html>
