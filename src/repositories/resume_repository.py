@@ -1,22 +1,24 @@
 import os
 import json
-import sqlite3
+import psycopg2
+from psycopg2.extras import RealDictCursor
 from datetime import datetime
 from src.config import config
 class ResumeRepository:
-    def __init__(self, db_path=None):
-        self.db_path = db_path or config.DATABASE_FILE
+    def __init__(self):
+        self.database_url = config.DATABASE_URL
+        if not self.database_url:
+            raise Exception("DATABASE_URL environment variable is required")
         self._init_database()
     def _get_connection(self):
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
+        conn = psycopg2.connect(self.database_url)
         return conn
     def _init_database(self):
         conn = self._get_connection()
         cursor = conn.cursor()
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS resumes (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 timestamp TEXT NOT NULL,
                 name TEXT,
                 email TEXT,
@@ -38,7 +40,7 @@ class ResumeRepository:
                 yecc_user_id TEXT,
                 yecc_resume_url TEXT,
                 yecc_profile_url TEXT,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_name ON resumes(name)')
@@ -46,7 +48,7 @@ class ResumeRepository:
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_erp_systems ON resumes(erp_systems)')
         conn.commit()
         conn.close()
-        print(f"✅ Database initialized: {self.db_path}")
+        print("✅ PostgreSQL database initialized")
     def save(self, parsed_data):
         conn = self._get_connection()
         cursor = conn.cursor()
@@ -57,7 +59,8 @@ class ResumeRepository:
                 erp_systems, erp_modules, technical_skills, certifications,
                 education, job_experience, erp_projects,
                 completeness_score, yecc_user_id, yecc_resume_url, yecc_profile_url
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING id
         ''', (
             datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             parsed_data.get('name', ''),
@@ -81,14 +84,12 @@ class ResumeRepository:
             parsed_data.get('_yecc_resume_url', ''),
             parsed_data.get('_yecc_profile_url', '')
         ))
+        resume_id = cursor.fetchone()[0]
         conn.commit()
-        resume_id = cursor.lastrowid
         conn.close()
-        print(f"✅ Data saved to SQLite (ID: {resume_id})")
+        print(f"✅ Data saved to PostgreSQL (ID: {resume_id})")
         return resume_id
     def count(self):
-        if not os.path.exists(self.db_path):
-            return 0
         conn = self._get_connection()
         cursor = conn.cursor()
         cursor.execute('SELECT COUNT(*) FROM resumes')
@@ -96,27 +97,21 @@ class ResumeRepository:
         conn.close()
         return count
     def get_all(self):
-        if not os.path.exists(self.db_path):
-            return []
         conn = self._get_connection()
-        cursor = conn.cursor()
-        cursor.execute('''
-            SELECT * FROM resumes ORDER BY id DESC
-        ''')
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute('SELECT * FROM resumes ORDER BY id DESC')
         rows = cursor.fetchall()
         conn.close()
         return [self._row_to_dict(row) for row in rows]
     def search(self, query):
-        if not os.path.exists(self.db_path):
-            return []
         conn = self._get_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
         pattern = f"%{query}%"
         cursor.execute('''
             SELECT * FROM resumes
-            WHERE name LIKE ? OR email LIKE ? OR current_role LIKE ? 
-                  OR erp_systems LIKE ? OR erp_modules LIKE ? OR technical_skills LIKE ?
-                  OR location LIKE ? OR summary LIKE ?
+            WHERE name ILIKE %s OR email ILIKE %s OR current_role ILIKE %s 
+                  OR erp_systems ILIKE %s OR erp_modules ILIKE %s OR technical_skills ILIKE %s
+                  OR location ILIKE %s OR summary ILIKE %s
             ORDER BY id DESC
         ''', (pattern,) * 8)
         rows = cursor.fetchall()

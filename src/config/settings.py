@@ -7,6 +7,7 @@ class Config:
     UPLOAD_FOLDER = "uploads"
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
     ALLOWED_EXTENSIONS = {"pdf", "docx", "doc"}
+    DATABASE_URL = os.getenv("DATABASE_URL")
     DATABASE_FILE = "resumes.db"
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
     GEMINI_MODEL = "gemini-2.0-flash-exp"
