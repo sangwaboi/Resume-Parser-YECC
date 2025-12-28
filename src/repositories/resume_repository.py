@@ -27,8 +27,8 @@ class ResumeRepository:
                 linkedin TEXT,
                 summary TEXT,
                 total_years_experience TEXT,
-                current_role TEXT,
-                current_company TEXT,
+                role_title TEXT,
+                company_name TEXT,
                 erp_systems TEXT,
                 erp_modules TEXT,
                 technical_skills TEXT,
@@ -55,7 +55,7 @@ class ResumeRepository:
         cursor.execute('''
             INSERT INTO resumes (
                 timestamp, name, email, phone, location, linkedin, summary,
-                total_years_experience, current_role, current_company,
+                total_years_experience, role_title, company_name,
                 erp_systems, erp_modules, technical_skills, certifications,
                 education, job_experience, erp_projects,
                 completeness_score, yecc_user_id, yecc_resume_url, yecc_profile_url
@@ -109,7 +109,7 @@ class ResumeRepository:
         pattern = f"%{query}%"
         cursor.execute('''
             SELECT * FROM resumes
-            WHERE name ILIKE %s OR email ILIKE %s OR current_role ILIKE %s 
+            WHERE name ILIKE %s OR email ILIKE %s OR role_title ILIKE %s 
                   OR erp_systems ILIKE %s OR erp_modules ILIKE %s OR technical_skills ILIKE %s
                   OR location ILIKE %s OR summary ILIKE %s
             ORDER BY id DESC
@@ -124,8 +124,8 @@ class ResumeRepository:
             'Email': row['email'],
             'Phone': row['phone'],
             'Location': row['location'],
-            'Current_Role': row['current_role'],
-            'Current_Company': row['current_company'],
+            'Current_Role': row['role_title'],
+            'Current_Company': row['company_name'],
             'Total_Years_Experience': row['total_years_experience'],
             'ERP_Systems': row['erp_systems'],
             'ERP_Modules': row['erp_modules'],
